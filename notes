@@ -1,0 +1,15 @@
+This file holds the notes, current issues, warnings, errors, future ideas.
+
+***Warnings***
+Dev-tools failed to load SourceMap warnings in the browser console.
+
+***Notes***
+
+
+***Journal***
+3.18.21:
+I have solved the problem with WebXR.
+It turned out to be the Babylon loaders module which I wasn't loading at
+all and the controllers didn't show up.
+They are now showing up and the warning messages along with the error are gone!
+

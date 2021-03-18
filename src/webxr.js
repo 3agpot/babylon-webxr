@@ -1,10 +1,11 @@
 import { Scene } from "@babylonjs/core/scene";
-import { SceneHelper } from "@babylonjs/core/Helpers/sceneHelpers";
+import { SceneHelper } from "@babylonjs/core/Helpers/sceneHelpers"; // TODO: figure out how to include this without it being greyed out.
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { Vector3 } from "@babylonjs/core/Maths";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Mesh } from "@babylonjs/core/Meshes";
+import { Loaders } from "@babylonjs/loaders"; // TODO: figure out how to include without it being greyed out. We need this to load gltf and glb models.
 
 var canvas = document.getElementById("webxrCanvas");
 
@@ -23,7 +24,7 @@ var createDefaultEngine = function() {
 var createScene = async function () {
 
     var scene = new Scene(engine);
-    var camera = new FreeCamera("camera1", new Vector3(0, 5, -10), scene);
+    var camera = new FreeCamera("camera1", new Vector3(0, 5, -5), scene);
     camera.setTarget(Vector3.Zero());
     camera.attachControl(canvas, true);
     var light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
