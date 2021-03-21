@@ -1,10 +1,11 @@
-const path = require('path');
+import { resolve } from 'path';
 
-module.exports = {
-  mode: "development",
-  entry: './src/webxr.js',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'test.js',
-  },
+export const mode = "development";
+export const entry = {
+  webxr: './src/webxr.js',
+  goalie: './src/goalie.js',
+};
+export const output = {
+  path: resolve(__dirname, 'dist'),
+  filename: '[name].js',
 };
