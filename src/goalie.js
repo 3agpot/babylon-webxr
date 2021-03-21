@@ -2,7 +2,11 @@ import { Scene } from "@babylonjs/core/scene";
 import { WebXRExperienceHelper,
     WebXRState,
     WebXRManagedOutputCanvasOptions,
-    ShadowGenerator } from "@babylonjs/core";
+    ShadowGenerator,
+    BoxBuilder,
+    WebXRFeatureName,
+    SphereBuilder } from "@babylonjs/core";
+//import * as Ammo from "ammo";
 import { SceneHelper } from "@babylonjs/core/Helpers/sceneHelpers"; // TODO: figure out how to include this without it being greyed out.
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
@@ -13,27 +17,21 @@ import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import { Mesh } from "@babylonjs/core/Meshes";
 import "@babylonjs/loaders"; // TODO: figure out how to include without it being greyed out. We need this to load gltf and glb models.
 import * as GUI from "@babylonjs/gui";
+import { GridMaterial } from "@babylonjs/materials/grid";
 
 var canvas = document.getElementById("goalieCanvas");
 
         var engine = null;
         var scene = null;
         var sceneToRender = null;
-        var createDefaultEngine = function() { return new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
-        /**
-         * WebXR Goalie training
-         * 
-         * This demo was made to display a few of js' WebXR features:
-         * 
-         * - The WebXR motion controller repository was integrated - any supported controller is fully supported
-         * - WebXR controllers can have physics impostors attached to them with one line of code.
-         * - Teleportation is still working - you can teleport to a different location. Not that it will help you win the game ;-)
-         * - You can play this game with the WebXR emulator. Thou I am pretty sure it will be VERY hard.
-         * 
-         * If you have any questions contact RaananW at babylon's forum or on twitter 
-         */
-        
-        
+        var createDefaultEngine = function() {
+            return new Engine(canvas, true, {
+                preserveDrawingBuffer: true,
+                stencil: true,
+                disableWebGL2Support: false
+            });
+        };
+       
         var createScene = async function () {
             // Create scene
             var scene = new Scene(engine);
@@ -132,16 +130,18 @@ var canvas = document.getElementById("goalieCanvas");
         
         
             // physics
+            //await Ammo();
             //scene.enablePhysics(undefined, new AmmoJSPlugin());
         
             // clone the ground to create parentless impostor
-            const groundNoParent = environment.ground.clone();
+            /*const groundNoParent = environment.ground.clone();
             groundNoParent.isVisible = false;
             groundNoParent.parent = undefined;
             groundNoParent.setAbsolutePosition(environment.ground.getAbsolutePosition());
             groundNoParent.material = undefined;
             groundNoParent.physicsImpostor = new PhysicsImpostor(groundNoParent, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 });
-        
+            */
+
             // build the goal
             const goalHeight = 2;
             const goalWidth = 3;
@@ -167,11 +167,11 @@ var canvas = document.getElementById("goalieCanvas");
             shadowGenerator.addShadowCaster(upperPole);
             shadowGenerator.addShadowCaster(goal);
         
-            rightPole.physicsImpostor = new PhysicsImpostor(rightPole, PhysicsImpostor.BoxImpostor, { mass: 0 })
+            /*rightPole.physicsImpostor = new PhysicsImpostor(rightPole, PhysicsImpostor.BoxImpostor, { mass: 0 })
             leftPole.physicsImpostor = new PhysicsImpostor(leftPole, PhysicsImpostor.BoxImpostor, { mass: 0 })
             upperPole.physicsImpostor = new PhysicsImpostor(upperPole, PhysicsImpostor.BoxImpostor, { mass: 0 })
             goal.physicsImpostor = new PhysicsImpostor(goal, PhysicsImpostor.BoxImpostor, { mass: 0 })
-        
+            */
         
             let counter = 0;
             const spheres = [];
@@ -223,27 +223,27 @@ var canvas = document.getElementById("goalieCanvas");
                     sphere.position.y = 0.2;
                     sphere.position.x += Math.random() * 2;
                     sphere.position.x -= Math.random() * 2;
-                    sphere.physicsImpostor = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, { mass: 0.7, restitution: 0.5 });
+                    //sphere.physicsImpostor = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, { mass: 0.7, restitution: 0.5 });
                     // shoot the ball up
-                    sphere.physicsImpostor.applyImpulse(new Vector3(0, 6.5 * gameConfig.heightFactor, 0), Vector3.Zero());
+                    //sphere.physicsImpostor.applyImpulse(new Vector3(0, 6.5 * gameConfig.heightFactor, 0), Vector3.Zero());
                     let sphereTouchedGround = 0;
                     // goal? bad for you...
-                    sphere.physicsImpostor.registerOnPhysicsCollide(goal.physicsImpostor, (collider, collidedAgainst) => {
+                    /*sphere.physicsImpostor.registerOnPhysicsCollide(goal.physicsImpostor, (collider, collidedAgainst) => {
                         if (sphere.hitGoal) return;
                         score--;
                         header.text = "Score: " + score;
                         sphere.hitGoal = true;
-                    });
+                    });*/
         
                     // a ball that touched the ground more than 4 times is considered a win
-                    sphere.physicsImpostor.registerOnPhysicsCollide(groundNoParent.physicsImpostor, (collider, collidedAgainst) => {
+                    /*sphere.physicsImpostor.registerOnPhysicsCollide(groundNoParent.physicsImpostor, (collider, collidedAgainst) => {
                         sphereTouchedGround++;
                         if (sphereTouchedGround > 4 || sphere.hitGoal) {
                             score += sphere.hitGoal ? 0 : 1;
                             header.text = "Score: " + score;
                             sphere.dispose();
                         }
-                    });
+                    });*/
                     // shoot the ball forward after a second
                     setTimeout(() => {
                         sphere.physicsImpostor.applyImpulse(new Vector3(0, 0, -(8 * gameConfig.forceFactor) - Math.random() + Math.random() - Math.random()), Vector3.Zero());
