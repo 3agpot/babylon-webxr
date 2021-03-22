@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     webxr: './src/webxr.js',
     goalie: './src/goalie.js',
+    sm: './src/sm.js',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

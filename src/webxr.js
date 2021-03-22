@@ -1,16 +1,16 @@
 import { Scene } from "@babylonjs/core/scene";
-import { WebXRExperienceHelper, WebXRState, WebXRManagedOutputCanvasOptions } from "@babylonjs/core";
 import { SceneHelper } from "@babylonjs/core/Helpers/sceneHelpers"; // TODO: figure out how to include this without it being greyed out.
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { Vector3 } from "@babylonjs/core/Maths";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { Mesh } from "@babylonjs/core/Meshes";
 import { Loaders } from "@babylonjs/loaders"; // TODO: figure out how to include without it being greyed out. We need this to load gltf and glb models.
 
 var canvas = document.getElementById("webxrCanvas");
 
+var engine = null;
+var scene = null;
 var sceneToRender = null;
 
 var createDefaultEngine = function() {
@@ -21,69 +21,66 @@ var createDefaultEngine = function() {
     });
 };
 
-let engine = createDefaultEngine();
-let scene = new Scene(engine);
+var createScene = async function () {
 
-let camera = new FreeCamera("camera1", new Vector3(0, 5, -5), scene);
-camera.setTarget(Vector3.Zero());
-camera.attachControl(canvas, true);
+    var scene = new Scene(engine);
+    var camera = new FreeCamera("camera1", new Vector3(0, 5, -5), scene);
+    camera.setTarget(Vector3.Zero());
+    camera.attachControl(canvas, true);
+    var light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
+    light.intensity = 0.7;
+    var sphere = Mesh.CreateSphere("sphere1", 16, 2, scene);
+    sphere.position.y = 1;
 
-let light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
-light.intensity = 0.7;
+    const env = scene.createDefaultEnvironment({ enableGroundShadow: true });
 
-let pointLight = new PointLight('light2', new Vector3(0.5, 5, 0.5), scene);
-pointLight.intensity = 0.2;
-
-let sphere = Mesh.CreateSphere("sphere1", 16, 2, scene);
-sphere.position.y = 1;
-    
-//const env = scene.createDefaultEnvironment();
-
-    /*const xr = await scene.createDefaultXRExperienceAsync({
+    const xr = await scene.createDefaultXRExperienceAsync({
         floorMeshes: [env.ground]
-    });*/
+    });
 
-(async () => {
-    let xrHelper = await WebXRExperienceHelper.CreateAsync(scene);
-    const sessionManager = await xrHelper.enterXRAsync("immersive-vr", "local-floor"); 
-    console.log(sessionManager);
-    const supported = await sessionManager.isSessionSupportedAsync('immersive-vr');
-    //sessionManager.onXRFrameObservable.add((frame) => {})
+    let sessionManager = xr.baseExperience.sessionManager;
+    await sessionManager.initializeSessionAsync('immersive-vr' /*, xrSessionInit */ );
+    const referenceSpace = await sessionManager.setReferenceSpaceTypeAsync( "local" );
+    console.log(sessionManager.session);
+    console.log(referenceSpace);
+    //let xrRefSpace = await session.requestReferenceSpace('local');
 
-    if (supported) {
-        console.log("xr available, session supported");
-        const xr = await sessionManager.initializeSessionAsync('immersive-vr', /*, xrSessionInit */ );
-        console.log(xr);
-        //const referenceSpace = sessionManager.setReferenceSpaceAsync( /*referenceSpaceType = 'local-floor'*/ );
+    xr.baseExperience.sessionManager.onXRFrameObservable.add((frame) => {
+        //console.log(xr.baseExperience.camera);
+        //console.log(frame.session);
+        console.log(frame);
         
-        let canvasOptions = WebXRManagedOutputCanvasOptions.GetDefaults();
-        canvasOptions.canvasElement = canvas;
-        const renderTarget = sessionManager.getWebXRRenderTarget(canvasOptions);
-        
-        const xrWebGLLayer = renderTarget.initializeXRLayerAsync(this.sessionManager.session);
-        sessionManager.runXRRenderLoop();
-    }
-    
-    xrHelper.onStateChangedObservable.add((state) => {
-        switch (state) {
-            case WebXRState.IN_XR:
-                console.log("XR is initialized and already submitted one frame")
-            case WebXRState.ENTERING_XR:
-                console.log("xr is being initialized, enter XR request was made");
-            case WebXRState.EXITING_XR:
-                console.log("xr exit request was made. not yet done");
-            case WebXRState.NOT_IN_XR:
-                console.log("self explanatory - either our or not yet in XR");
+        let pose = frame.getViewerPose(referenceSpace);
+        if (pose) {
+            for (let view of pose.views) {
+                if (view.eye == "left") {
+                    sphere.visibility = true;                    
+                }
+                else {
+                    sphere.visibility = false;
+                }
+                //if view is left, then set the visible to false for the desk
+                /*if (view.eye == "left") {
+                scene.children[2].visible = false;
+                scene.draw(view.projectionMatrix, view.transform);
+                }
+                else {
+                scene.children[2].visible = true;
+                scene.draw(view.projectionMatrix, view.transform);
+                }*/
+
+            }
+
         }
     });
-})();
 
-    /*let cam = xr.input.xrCamera
-    console.log("logging camera");
-    console.log(cam);*/
+    return scene;
+};
 
+var engine;
+var scene;
 
-/*let initFunction = async function() {               
+let initFunction = async function() {               
     var asyncEngineCreation = async function() {
         try {
             return createDefaultEngine();
@@ -108,7 +105,7 @@ initFunction().then(() => {
             sceneToRender.render();
         }
     });
-});*/
+});
 
 // Resize
 window.addEventListener("resize", function () {

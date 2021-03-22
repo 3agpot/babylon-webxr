@@ -196,7 +196,7 @@ var canvas = document.getElementById("goalieCanvas");
             });
         
             // get the features manager
-            const fm = xr.baseExperience.featuresManager;
+            /*const fm = xr.baseExperience.featuresManager;
         
             // enable physics on the motion controllers
             const xrPhysics = fm.enableFeature(WebXRFeatureName.PHYSICS_CONTROLLERS, "latest", {
@@ -205,7 +205,7 @@ var canvas = document.getElementById("goalieCanvas");
                     restitution: 0.5,
                     impostorSize: 0.15
                 }
-            });
+            });*/
         
             let throwBalls = false;
             let score = 0;
