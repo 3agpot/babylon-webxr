@@ -51,7 +51,6 @@ var createScene = async function () {
 
     wall.scaling = new Vector3(4,4,1);
     wall.position = new Vector3(0, 0.5, 0.5);
-    //wall.isPickable = false;
 
     let ground = MeshBuilder.CreateGround("Woodfloor", {
         width: 2,
@@ -64,15 +63,28 @@ var createScene = async function () {
     }, scene);
 
     let disc = MeshBuilder.CreateDisc("target", {
-        radius: 0.1,
+        radius: 0.08,
         updatable: true,
     }, scene);
-
+    
     disc.position = new Vector3(-1, 1, 0.45);
+    
     let discMaterial = new StandardMaterial("discMaterial", scene);
     discMaterial.alpha = 1;
-    discMaterial.diffuseColor = new Color3(1.0, 0.2, 0.7);
     disc.material = discMaterial;
+
+    let torus = MeshBuilder.CreateTorus("torus", {
+        diameter: 0.25,
+        thickness: 0.04,
+    }, scene);
+
+    torus.isPickable = false;
+    torus.position = new Vector3(-1, 1, 0.45);
+    torus.rotation.x = Math.PI/2;
+    let torusMaterial = new StandardMaterial("torusMaterial", scene);
+    torusMaterial.alpha = 1;
+    torusMaterial.diffuseColor = new Color3(1.0, 0.2, 0.7);
+    torus.material = torusMaterial;
 
     const env = scene.createDefaultEnvironment({ enableGroundShadow: true });
 
@@ -81,62 +93,43 @@ var createScene = async function () {
     });
 
     //xr.pointerSelection.displayLaserPointer = false;
-    //xr.pointerSelection.displaySelectionMesh = false;
+    xr.pointerSelection.displaySelectionMesh = false;
 
     scene.onBeforeCameraRenderObservable.add((camera) => {
         
-        if (camera.isRightCamera) {
+        /*if (camera.isRightCamera) {
             disc.visibility = false;
         }
         else {
             disc.visibility = true;
-        }
+        }*/
     });
 
-    xr.input.onControllerAddedObservable.add(inputSource => {
-        //const ray = new Ray(inputSource.pointer.absolutePosition, inputSource.pointer.forward, Infinity);
-        //inputSource.getWorldPointerRayToRef(ray);
-        //console.log(inputSource);
-        
+    xr.input.onControllerAddedObservable.add(inputSource => {       
         scene.onBeforeRenderObservable.add(something => {
+            // we only need the right controller
             if (inputSource.inputSource.handedness !== "right") return;
+            
             const ray = new Ray(inputSource.pointer.absolutePosition, inputSource.pointer.forward, Infinity);
             inputSource.getWorldPointerRayToRef(ray);
-            //console.log(ray.direction);
 
             var hit = scene.pickWithRay(ray);
-            if (hit.pickedPoint) {
-                //console.log(hit.pickedPoint);
-                //console.log(disc.position);
-                disc.position = hit.pickedPoint;
-                //disc.position.z -= 0.04;
+            if (hit.pickedMesh && hit.pickedMesh === wall) {
+                if (hit.pickedPoint) {
+                    torus.position = hit.pickedPoint;
+                }
             }
-
-            //disc.position.x = ray.direction.x;
-            //disc.translate(new Vector3(1, -1, 0), 0.001, Space.WORLD);
+            disc.material.diffuseColor = new Vector3(1, 0, 1);
+            if (ray.intersectsMesh(disc)) {
+                console.log("intersects the disc");
+                disc.material.diffuseColor = new Color3(0, 0, 1);
+            }
         });
-        /*inputSource.onMotionControllerInitObservable.add(motionController => {
-            if (motionController.handedness != "right") return;
-            console.log(motionController);
-            
-        });*/
     });
 
-    /*xr.baseExperience.sessionManager.onXRFrameObservable.add(frame => {
-        let inputSources = xr.input.controllers;//frame.session.inputSources;
-        let rightController = inputSources.find(c => c.inputSource.handedness === "right");
-        
-        const ray = new Ray(rightController.pointer.absolutePosition, rightController.pointer.forward, Infinity);
-        rightController.getWorldPointerRayToRef(ray);
-        console.log(ray.direction);
-    });*/
-
-    //console.log(xr.baseExperience.sessionManager);
-
-    /*xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-        let rightMotionController = xr.input.controllers[1];
-        console.log(rightMotionController);
-    });*/
+    xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+        console.log("XR session initialized");
+    });
 
     return scene;
 };
@@ -144,14 +137,9 @@ var createScene = async function () {
 var engine;
 var scene;
 
-let initFunction = async function() {               
-    var asyncEngineCreation = async function() {
-        try {
-            return createDefaultEngine();
-        } catch(e) {
-            console.log("the available createEngine function failed. Creating the default engine instead");
-            return createDefaultEngine();
-        }
+let initFunction = async () => {               
+    var asyncEngineCreation = async () => {
+        return createDefaultEngine();
     }
 
     engine = await asyncEngineCreation();
@@ -164,7 +152,7 @@ initFunction().then(() => {
         sceneToRender = returnedScene;
     });
 
-    engine.runRenderLoop(function () {
+    engine.runRenderLoop(() => {
         if (sceneToRender && sceneToRender.activeCamera) {
             sceneToRender.render();
         }
