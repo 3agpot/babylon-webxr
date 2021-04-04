@@ -51,6 +51,7 @@ var createScene = async function () {
 
     wall.scaling = new Vector3(4,4,1);
     wall.position = new Vector3(0, 0.5, 0.5);
+    //wall.isPickable = false;
 
     let ground = MeshBuilder.CreateGround("Woodfloor", {
         width: 2,
@@ -79,6 +80,9 @@ var createScene = async function () {
         floorMeshes: [env.ground]
     });
 
+    //xr.pointerSelection.displayLaserPointer = false;
+    //xr.pointerSelection.displaySelectionMesh = false;
+
     scene.onBeforeCameraRenderObservable.add((camera) => {
         
         if (camera.isRightCamera) {
@@ -93,13 +97,22 @@ var createScene = async function () {
         //const ray = new Ray(inputSource.pointer.absolutePosition, inputSource.pointer.forward, Infinity);
         //inputSource.getWorldPointerRayToRef(ray);
         //console.log(inputSource);
+        
         scene.onBeforeRenderObservable.add(something => {
             if (inputSource.inputSource.handedness !== "right") return;
             const ray = new Ray(inputSource.pointer.absolutePosition, inputSource.pointer.forward, Infinity);
             inputSource.getWorldPointerRayToRef(ray);
-            console.log(ray.direction);
+            //console.log(ray.direction);
 
-            disc.position.x = ray.direction.x;
+            var hit = scene.pickWithRay(ray);
+            if (hit.pickedPoint) {
+                //console.log(hit.pickedPoint);
+                //console.log(disc.position);
+                disc.position = hit.pickedPoint;
+                //disc.position.z -= 0.04;
+            }
+
+            //disc.position.x = ray.direction.x;
             //disc.translate(new Vector3(1, -1, 0), 0.001, Space.WORLD);
         });
         /*inputSource.onMotionControllerInitObservable.add(motionController => {
